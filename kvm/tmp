@@ -1,0 +1,69 @@
+assigned-dev.c:	 * initialized */
+assigned-dev.c:	spin_lock_init(&match->intx_lock);
+assigned-dev.c:	spin_lock_init(&match->intx_mask_lock);
+async_pf.c:int kvm_async_pf_init(void)
+async_pf.c:void kvm_async_pf_deinit(void)
+async_pf.c:void kvm_async_pf_vcpu_init(struct kvm_vcpu *vcpu)
+async_pf.c:	spin_lock_init(&vcpu->async_pf.lock);
+async_pf.h:int kvm_async_pf_init(void);
+async_pf.h:void kvm_async_pf_deinit(void);
+async_pf.h:void kvm_async_pf_vcpu_init(struct kvm_vcpu *vcpu);
+async_pf.h:#define kvm_async_pf_init() (0)
+async_pf.h:#define kvm_async_pf_deinit() do{}while(0)
+async_pf.h:#define kvm_async_pf_vcpu_init(C) do{}while(0)
+coalesced_mmio.c:int kvm_coalesced_mmio_init(struct kvm *kvm)
+coalesced_mmio.c:	spin_lock_init(&kvm->ring_lock);
+coalesced_mmio.c:	kvm_iodevice_init(&dev->dev, &coalesced_mmio_ops);
+coalesced_mmio.h:int kvm_coalesced_mmio_init(struct kvm *kvm);
+coalesced_mmio.h:static inline int kvm_coalesced_mmio_init(struct kvm *kvm) { return 0; }
+eventfd.c:	list_del_init(&irqfd->list);
+eventfd.c:	init_waitqueue_func_entry(&irqfd->wait, irqfd_wakeup);
+eventfd.c:	init_poll_funcptr(&irqfd->pt, irqfd_ptable_queue_proc);
+eventfd.c:	 * do not drop the file until the irqfd is fully initialized, otherwise
+eventfd.c:kvm_eventfd_init(struct kvm *kvm)
+eventfd.c:	spin_lock_init(&kvm->irqfds.lock);
+eventfd.c:static int __init irqfd_module_init(void)
+eventfd.c:module_init(irqfd_module_init);
+eventfd.c:	kvm_iodevice_init(&p->dev, &ioeventfd_ops);
+ioapic.c:int kvm_ioapic_init(struct kvm *kvm)
+ioapic.c:	spin_lock_init(&ioapic->lock);
+ioapic.c:	kvm_iodevice_init(&ioapic->dev, &ioapic_mmio_ops);
+ioapic.h:int kvm_ioapic_init(struct kvm *kvm);
+iodev.h:static inline void kvm_iodevice_init(struct kvm_io_device *dev,
+irq_comm.c:	hlist_del_init_rcu(&kian->link);
+kvm_main.c:int kvm_vcpu_init(struct kvm_vcpu *vcpu, struct kvm *kvm, unsigned id)
+kvm_main.c:	mutex_init(&vcpu->mutex);
+kvm_main.c:	init_waitqueue_head(&vcpu->wq);
+kvm_main.c:	kvm_async_pf_vcpu_init(vcpu);
+kvm_main.c:	r = kvm_arch_vcpu_init(vcpu);
+kvm_main.c:EXPORT_SYMBOL_GPL(kvm_vcpu_init);
+kvm_main.c:void kvm_vcpu_uninit(struct kvm_vcpu *vcpu)
+kvm_main.c:	kvm_arch_vcpu_uninit(vcpu);
+kvm_main.c:EXPORT_SYMBOL_GPL(kvm_vcpu_uninit);
+kvm_main.c:static int kvm_init_mmu_notifier(struct kvm *kvm)
+kvm_main.c:static int kvm_init_mmu_notifier(struct kvm *kvm)
+kvm_main.c:static void kvm_init_memslots_id(struct kvm *kvm)
+kvm_main.c:	r = kvm_arch_init_vm(kvm, type);
+kvm_main.c:	kvm_init_memslots_id(kvm);
+kvm_main.c:	if (init_srcu_struct(&kvm->srcu))
+kvm_main.c:	spin_lock_init(&kvm->mmu_lock);
+kvm_main.c:	kvm_eventfd_init(kvm);
+kvm_main.c:	mutex_init(&kvm->lock);
+kvm_main.c:	mutex_init(&kvm->irq_lock);
+kvm_main.c:	mutex_init(&kvm->slots_lock);
+kvm_main.c:	r = kvm_init_mmu_notifier(kvm);
+kvm_main.c:int kvm_gfn_to_hva_cache_init(struct kvm *kvm, struct gfn_to_hva_cache *ghc,
+kvm_main.c:EXPORT_SYMBOL_GPL(kvm_gfn_to_hva_cache_init);
+kvm_main.c:		kvm_gfn_to_hva_cache_init(kvm, ghc, ghc->gpa);
+kvm_main.c:		kvm_gfn_to_hva_cache_init(kvm, ghc, ghc->gpa);
+kvm_main.c:	finish_wait(&vcpu->wq, &wait);
+kvm_main.c:	preempt_notifier_init(&vcpu->preempt_notifier, &kvm_preempt_ops);
+kvm_main.c:	r = kvm_coalesced_mmio_init(kvm);
+kvm_main.c:static int kvm_init_debug(void)
+kvm_main.c:int kvm_init(void *opaque, unsigned vcpu_size, unsigned vcpu_align,
+kvm_main.c:	r = kvm_arch_init(opaque);
+kvm_main.c:	r = kvm_async_pf_init();
+kvm_main.c:	r = kvm_init_debug();
+kvm_main.c:	kvm_async_pf_deinit();
+kvm_main.c:EXPORT_SYMBOL_GPL(kvm_init);
+kvm_main.c:	kvm_async_pf_deinit();
