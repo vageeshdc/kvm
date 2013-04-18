@@ -57,15 +57,15 @@ struct _irqfd {
 	struct list_head list;
 	poll_table pt;
 	struct work_struct shutdown;
-};
-
-static struct workqueue_struct *irqfd_cleanup_wq;
-
-static void
-irqfd_inject(struct work_struct *work)
+	
+private:
+    	
+void irqfd_inject(struct work_struct *work)
 {
-	struct _irqfd *irqfd = container_of(work, struct _irqfd, inject);
-	struct kvm *kvm = irqfd->kvm;
+	//struct _irqfd *irqfd = container_of(work, struct _irqfd, inject);//constructir
+	inject = &work;// issue...
+	
+	struct kvm *kvm = &kvm;
 
 	kvm_set_irq(kvm, KVM_USERSPACE_IRQ_SOURCE_ID, irqfd->gsi, 1);
 	kvm_set_irq(kvm, KVM_USERSPACE_IRQ_SOURCE_ID, irqfd->gsi, 0);
@@ -74,53 +74,56 @@ irqfd_inject(struct work_struct *work)
 /*
  * Race-free decouple logic (ordering is critical)
  */
-static void
-irqfd_shutdown(struct work_struct *work)
+void irqfd_shutdown(struct work_struct *work)
 {
-	struct _irqfd *irqfd = container_of(work, struct _irqfd, shutdown);
+	//struct _irqfd *irqfd = container_of(work, struct _irqfd, shutdown);
+	shutdown = &work;
 	u64 cnt;
 
 	/*
 	 * Synchronize with the wait-queue and unhook ourselves to prevent
 	 * further events.
 	 */
-	eventfd_ctx_remove_wait_queue(irqfd->eventfd, &irqfd->wait, &cnt);
+	eventfd_ctx_remove_wait_queue(eventfd, &wait, &cnt);
 
 	/*
 	 * We know no new events will be scheduled at this point, so block
 	 * until all previously outstanding events have completed
 	 */
-	flush_work_sync(&irqfd->inject);
+	flush_work_sync(&inject);
 
 	/*
 	 * It is now safe to release the object's resources
 	 */
-	eventfd_ctx_put(irqfd->eventfd);
+	eventfd_ctx_put(eventfd);
 	kfree(irqfd);
 }
 
-
 /* assumes kvm->irqfds.lock is held */
-static bool
-irqfd_is_active(struct _irqfd *irqfd)
+bool irqfd_is_active()
 {
-	return list_empty(&irqfd->list) ? false : true;
+	return list_empty(list) ? false : true;
 }
+
 
 /*
  * Mark the irqfd as inactive and schedule it for removal
  *
  * assumes kvm->irqfds.lock is held
  */
-static void
-irqfd_deactivate(struct _irqfd *irqfd)
+void irqfd_deactivate(struct _irqfd *irqfd)
 {
-	BUG_ON(!irqfd_is_active(irqfd));
+	BUG_ON(!irqfd_is_active(&this));
 
-	list_del_init(&irqfd->list);
+	list_del_init(list);
 
-	queue_work(irqfd_cleanup_wq, &irqfd->shutdown);
+	queue_work(irqfd_cleanup_wq, shutdown);
 }
+    	    	
+};
+
+static struct workqueue_struct *irqfd_cleanup_wq;
+
 
 /*
  * Called with wqh->lock held and interrupts disabled
@@ -172,12 +175,13 @@ static void
 irqfd_ptable_queue_proc(struct file *file, wait_queue_head_t *wqh,
 			poll_table *pt)
 {
-	struct _irqfd *irqfd = container_of(pt, struct _irqfd, pt);
+	_irqfd irqfd();// = container_of(pt, struct _irqfd, pt);
+	_irqfd irqfd.pt = pt;
 	add_wait_queue(wqh, &irqfd->wait);
 }
 
 /* Must be called under irqfds.lock */
-static void irqfd_update(struct kvm *kvm, struct _irqfd *irqfd,
+static void irqfd_update(struct kvm *kvm, _irqfd *irqfd,
 			 struct kvm_irq_routing_table *irq_rt)
 {
 	struct kvm_kernel_irq_routing_entry *e;

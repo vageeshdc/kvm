@@ -16,54 +16,18 @@
 
 #include "coalesced_mmio.h"
 
-static inline struct kvm_coalesced_mmio_dev *to_mmio(struct kvm_io_device *dev)
+static inline struct kvm_coalesced_mmio_dev *to_mmio(kvm_io_device *dev)
 {
-	return container_of(dev, struct kvm_coalesced_mmio_dev, dev);
+	return container_of(dev, struct kvm_coalesced_mmio_dev, dev);//issue ...
 }
 
-static int coalesced_mmio_in_range(struct kvm_coalesced_mmio_dev *dev,
-				   gpa_t addr, int len)
-{
-	/* is it in a batchable area ?
-	 * (addr,len) is fully included in
-	 * (zone->addr, zone->size)
-	 */
-	if (len < 0)
-		return 0;
-	if (addr + len < addr)
-		return 0;
-	if (addr < dev->zone.addr)
-		return 0;
-	if (addr + len > dev->zone.addr + dev->zone.size)
-		return 0;
-	return 1;
-}
 
-static int coalesced_mmio_has_room(struct kvm_coalesced_mmio_dev *dev)
-{
-	struct kvm_coalesced_mmio_ring *ring;
-	unsigned avail;
 
-	/* Are we able to batch it ? */
 
-	/* last is the first free entry
-	 * check if we don't meet the first used entry
-	 * there is always one unused entry in the buffer
-	 */
-	ring = dev->kvm->coalesced_mmio_ring;
-	avail = (ring->first - ring->last - 1) % KVM_COALESCED_MMIO_MAX;
-	if (avail == 0) {
-		/* full */
-		return 0;
-	}
-
-	return 1;
-}
-
-static int coalesced_mmio_write(struct kvm_io_device *this,
+static int coalesced_mmio_write(kvm_io_device *thisObj,
 				gpa_t addr, int len, const void *val)
 {
-	struct kvm_coalesced_mmio_dev *dev = to_mmio(this);
+	struct kvm_coalesced_mmio_dev *dev = to_mmio(thisObj);// issue here .. 
 	struct kvm_coalesced_mmio_ring *ring = dev->kvm->coalesced_mmio_ring;
 
 	if (!coalesced_mmio_in_range(dev, addr, len))
@@ -87,9 +51,11 @@ static int coalesced_mmio_write(struct kvm_io_device *this,
 	return 0;
 }
 
-static void coalesced_mmio_destructor(struct kvm_io_device *this)
+static void coalesced_mmio_destructor(kvm_io_device *thisObj)
 {
-	struct kvm_coalesced_mmio_dev *dev = to_mmio(this);
+//rewrite to_mmio
+//rewirite kfree!!!
+	kvm_coalesced_mmio_dev *dev = to_mmio(thisObj);
 
 	list_del(&dev->list);
 
@@ -136,9 +102,9 @@ int kvm_vm_ioctl_register_coalesced_mmio(struct kvm *kvm,
 					 struct kvm_coalesced_mmio_zone *zone)
 {
 	int ret;
-	struct kvm_coalesced_mmio_dev *dev;
+	kvm_coalesced_mmio_dev *dev;
 
-	dev = kzalloc(sizeof(struct kvm_coalesced_mmio_dev), GFP_KERNEL);
+	dev = new kvm_coalesced_mmio_dev() ! // need to write constructorj//kzalloc(sizeof(struct kvm_coalesced_mmio_dev), GFP_KERNEL);
 	if (!dev)
 		return -ENOMEM;
 
@@ -148,7 +114,7 @@ int kvm_vm_ioctl_register_coalesced_mmio(struct kvm *kvm,
 
 	mutex_lock(&kvm->slots_lock);
 	ret = kvm_io_bus_register_dev(kvm, KVM_MMIO_BUS, zone->addr,
-				      zone->size, &dev->dev);
+				      zone->size, &dev->dev); // collision here ..
 	if (ret < 0)
 		goto out_free_dev;
 	list_add_tail(&dev->list, &kvm->coalesced_zones);
@@ -170,11 +136,12 @@ out_free_dev:
 int kvm_vm_ioctl_unregister_coalesced_mmio(struct kvm *kvm,
 					   struct kvm_coalesced_mmio_zone *zone)
 {
-	struct kvm_coalesced_mmio_dev *dev, *tmp;
+	kvm_coalesced_mmio_dev *dev, *tmp;
 
 	mutex_lock(&kvm->slots_lock);
 
-	list_for_each_entry_safe(dev, tmp, &kvm->coalesced_zones, list)
+	list_for_each_entry_safe(dev, tmp, &kvm->coalesced_zones, list)// clash here ...
+	
 		if (coalesced_mmio_in_range(dev, zone->addr, zone->size)) {
 			kvm_io_bus_unregister_dev(kvm, KVM_MMIO_BUS, &dev->dev);
 			kvm_iodevice_destructor(&dev->dev);

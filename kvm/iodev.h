@@ -19,7 +19,36 @@
 #include <linux/kvm_types.h>
 #include <asm/errno.h>
 
-struct kvm_io_device;
+
+class kvm_io_device{
+    
+    const struct kvm_io_device_ops *ops;
+    
+private:
+    inline void kvm_iodevice_init(const struct kvm_io_device_ops *ops)
+    {
+	    this.ops = ops;
+    }
+
+    inline int kvm_iodevice_read(gpa_t addr, int l, void *v)
+    {
+	    return ops->read ? dev->ops->read(&this, addr, l, v) : -EOPNOTSUPP;
+    }
+
+    inline int kvm_iodevice_write(gpa_t addr, int l, const void *v)
+    {
+	    return ops->write ? ops->write(&this, addr, l, v) : -EOPNOTSUPP;
+    }
+
+    inline void kvm_iodevice_destructor()
+    {
+	    if (ops->destructor)
+		    ops->destructor(&this);
+    }
+}
+
+
+//struct kvm_io_device;
 
 /**
  * kvm_io_device_ops are called under kvm slots_lock.
@@ -39,32 +68,6 @@ struct kvm_io_device_ops {
 };
 
 
-struct kvm_io_device {
-	const struct kvm_io_device_ops *ops;
-};
 
-static inline void kvm_iodevice_init(struct kvm_io_device *dev,
-				     const struct kvm_io_device_ops *ops)
-{
-	dev->ops = ops;
-}
-
-static inline int kvm_iodevice_read(struct kvm_io_device *dev,
-				    gpa_t addr, int l, void *v)
-{
-	return dev->ops->read ? dev->ops->read(dev, addr, l, v) : -EOPNOTSUPP;
-}
-
-static inline int kvm_iodevice_write(struct kvm_io_device *dev,
-				     gpa_t addr, int l, const void *v)
-{
-	return dev->ops->write ? dev->ops->write(dev, addr, l, v) : -EOPNOTSUPP;
-}
-
-static inline void kvm_iodevice_destructor(struct kvm_io_device *dev)
-{
-	if (dev->ops->destructor)
-		dev->ops->destructor(dev);
-}
 
 #endif /* __KVM_IODEV_H__ */
